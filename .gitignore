@@ -11,6 +11,8 @@ WELFake_Dataset.csv
 processed/
 *.pt
 *.pth
+data_exploration.png
+evaluation_plots.png
 
 # Environment files
 .env
