@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
 import json
+import os
 import re
 import nltk
 import httpx
@@ -21,7 +22,7 @@ NUM_LAYERS = 2
 DROPOUT    = 0.3
 DEVICE     = torch.device('cpu')
 
-NEWS_API_KEY = "5773679467114700b115b0ee37acee99"  # newsapi.org key
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # newsapi.org key
 
 # ── Load vocab ────────────────────────────────────────────
 with open('processed/vocab.json', 'r') as f:
@@ -92,6 +93,8 @@ def get_keywords(text, top_n=5):
 
 # ── NewsAPI verification ──────────────────────────────────
 async def verify_with_newsapi(query: str):
+    if not NEWS_API_KEY:
+        return 0, []
     try:
         short_query = ' '.join(query.split()[:6])
         short_query = re.sub(r"['\"\(\)\[\]]", '', short_query)
@@ -179,7 +182,10 @@ async def predict(news: NewsInput):
     lstm_fake = prob
 
     # Step 2 — NewsAPI verification
-    news_found, sources = await verify_with_newsapi(news.text)
+    if NEWS_API_KEY:
+        news_found, sources = await verify_with_newsapi(news.text)
+    else:
+        news_found, sources = 0, []
 
     # Step 3 — Combine scores
     final_real, final_fake = compute_final_score(lstm_real, news_found)
@@ -187,7 +193,9 @@ async def predict(news: NewsInput):
     confidence = round(max(final_real, final_fake) * 100, 2)
 
     # Step 4 — Verification note
-    if news_found >= 3:
+    if not NEWS_API_KEY:
+        note = "NewsAPI key not set — LSTM score used"
+    elif news_found >= 3:
         note = f"✅ Found in {news_found} real news sources — score boosted"
     elif news_found > 0:
         note = f"⚠️ Found in {news_found} source(s) — slight boost applied"

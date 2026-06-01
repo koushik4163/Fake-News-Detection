@@ -55,13 +55,17 @@ Artifacts created:
 
 The FastAPI app loads `processed/vocab.json` and `processed/best_model.pt`.
 
-1. Set a NewsAPI key in `backend/5_api.py` (replace the hardcoded `NEWS_API_KEY`).
+1. (Optional) Set the `NEWS_API_KEY` environment variable (for NewsAPI verification). If it is not set, the API uses the LSTM score only.
 2. Run the API:
 
 ```bash
-# Note: Python module names cannot start with a digit.
-# Rename backend/5_api.py to backend/api.py, then run:
 uvicorn backend.api:app --reload
+```
+
+Example (PowerShell):
+
+```bash
+$env:NEWS_API_KEY="your_key_here"
 ```
 
 Example request:
